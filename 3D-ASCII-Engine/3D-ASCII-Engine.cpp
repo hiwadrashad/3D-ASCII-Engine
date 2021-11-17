@@ -1,12 +1,13 @@
 
 #include <iostream>
 #include <Windows.h>
+#include <chrono>
 
 int nScreenWidth = 120;
 int nScreenHeight = 40;
 
-float fPlayerX = 0.0f;
-float fplayerY = 0.0f;
+float fPlayerX = 8.0f;
+float fplayerY = 8.0f;
 float fPlayerA = 0.0f;
 
 int nMapHeight = 16;
@@ -27,6 +28,8 @@ int main()
     map += L"################";
     map += L"#..............#";
     map += L"#..............#";
+    map += L"#...........#..#";
+    map += L"#...........#..#";
     map += L"#..............#";
     map += L"#..............#";
     map += L"#..............#";
@@ -35,9 +38,7 @@ int main()
     map += L"#..............#";
     map += L"#..............#";
     map += L"#..............#";
-    map += L"#..............#";
-    map += L"#..............#";
-    map += L"#..............#";
+    map += L"#.........######";
     map += L"#..............#";
     map += L"#..............#";
     map += L"################";
@@ -45,6 +46,36 @@ int main()
 
     while (1)
     {
+        if (GetAsyncKeyState((unsigned short)'A') & 0x8000)
+        {
+            fPlayerA -= (0.001);
+        }
+        if (GetAsyncKeyState((unsigned short)'D') & 0x8000)
+        {
+            fPlayerA += (0.001);
+        }
+        if (GetAsyncKeyState((unsigned short)'W') & 0x8000)
+        {
+            fPlayerX += sinf(fPlayerA) * 0.05f;
+            fplayerY += cosf(fPlayerA) * 0.05f;
+
+            if (map[(int)fplayerY * nMapWidth + (int)fPlayerX] == '#')
+            {
+                fPlayerX -= sinf(fPlayerA) * 0.05f;
+                fplayerY -= cosf(fPlayerA) * 0.05f;
+            }
+        }
+        if (GetAsyncKeyState((unsigned short)'S') & 0x8000)
+        {
+            fPlayerX -= sinf(fPlayerA) * 0.05f;
+            fplayerY -= cosf(fPlayerA) * 0.05f;
+
+            if (map[(int)fplayerY * nMapWidth + (int)fPlayerX] == '#')
+            {
+                fPlayerX += sinf(fPlayerA) * 0.05f;
+                fplayerY += cosf(fPlayerA) * 0.05f;
+            }
+        }
         for (int x = 0; x < nScreenWidth; x++)
         {
             float fRayAngle = (fPlayerA - fFOV / 2.0f) + ((float)x / (float)nScreenWidth) * fFOV;
@@ -70,10 +101,50 @@ int main()
                 }
                 else
                 {
-                    if (map[nTestY * nMapWidth + nTestX] == "#")
+                    if (map[nTestY * nMapWidth + nTestX] == '#')
                     {
                         bHitWall = true;
                     }
+                }
+            }
+
+            int nCeiling = (float)(nScreenHeight / 2.0) - nScreenHeight / ((float)fDistanceToWall);
+            int nFloor = nScreenHeight - nCeiling;
+
+            short nShade = ' ';
+
+            if (fDistanceToWall <= fDepth / 4.0f)
+            {
+                nShade = 0x2588;
+            }
+            else if (fDistanceToWall < fDepth / 3.0f)
+            {
+                nShade = 0x2593;
+            }
+            else if (fDistanceToWall < fDepth / 2.0f)
+            {
+                nShade = 0x2591;
+            }
+            else 
+            {
+                nShade = '#';
+            }
+
+
+            for (int y = 0; y < nScreenHeight; y++)
+            {
+                if (y < nCeiling)
+                {
+                    screen[y * nScreenWidth + x] = ' ';
+                }
+                else if (y > nCeiling && y <= nFloor)
+                {
+                    screen[y * nScreenWidth + x] = nShade;
+                }
+                else
+                {
+     
+                    screen[y * nScreenWidth + x] =  ' ';
                 }
             }
         }
